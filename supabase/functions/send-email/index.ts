@@ -13,10 +13,28 @@ serve(async (req: { method: string; json: () => PromiseLike<{ name: any; email: 
   }
 
   try {
-    const { name, email, message } = await req.json();
+    const { name, email, message, captchaToken } = await req.json();
 
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const verifyCaptcha = await fetch(
+  "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: `secret=${Deno.env.get("TURNSTILE_SECRET_KEY")}&response=${captchaToken}`,
+  }
+);
 
+const captchaResult = await verifyCaptcha.json();
+
+if (!captchaResult.success) {
+  return new Response(
+    JSON.stringify({ error: "Captcha verification failed" }),
+    { status: 400, headers: corsHeaders }
+  );
+}
     await resend.emails.send({
       from: "onboarding@resend.dev",
       to: ["amral3117@gmail.com"], // خلي ده نفس ايميل حسابك لو test
