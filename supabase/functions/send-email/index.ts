@@ -36,8 +36,8 @@ if (!captchaResult.success) {
   );
 }
     await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: ["amral3117@gmail.com"], // خلي ده نفس ايميل حسابك لو test
+      from: "Contact <contact@contact-azure-two.vercel.app>",
+      to: ["amrrmersall@gmail.com"], // خلي ده نفس ايميل حسابك لو test
       subject: "New Contact Form Submission",
       html: `
         <h2>New Contact Message</h2>
