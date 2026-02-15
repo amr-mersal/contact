@@ -57,7 +57,7 @@ export default function ContactForm() {
   return (
     <form onSubmit={handleSubmit}>
       <Turnstile
-        sitekey="YOUR_SITE_KEY"
+        sitekey="0x4AAAAAACceNZ3KrjIuKt1b"
         onSuccess={(token) => setCaptchaToken(token)}
       />
       <input name="name" onChange={handleChange} placeholder="Name" required />
