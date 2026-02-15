@@ -4,22 +4,20 @@ import Turnstile from "react-turnstile";
 
 export default function ContactForm() {
   const [captchaToken, setCaptchaToken] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-  name: "",
-  email: "",
-  message: "",
-});
-
-const handleChange = (e) => {
-  setFormData({
-    ...formData,
-    [e.target.name]: e.target.value,
+    name: "",
+    email: "",
+    message: "",
   });
-};
 
-  const [loading, setLoading] = useState(false);
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,13 +30,15 @@ const handleChange = (e) => {
     }
 
     try {
+      // 1️⃣ Save to database
       const { error } = await supabase
         .from("contacts")
         .insert([formData]);
 
       if (error) throw error;
 
-      await fetch(
+      // 2️⃣ Send email
+      const response = await fetch(
         "https://enwgxqyvybcqsvqbzbip.supabase.co/functions/v1/send-email",
         {
           method: "POST",
@@ -50,7 +50,19 @@ const handleChange = (e) => {
         }
       );
 
-      setSubmitted(true);
+      if (!response.ok) throw new Error("Email failed");
+
+      // 3️⃣ Reset form after success
+      alert("Message sent 🚀");
+
+      setFormData({
+        name: "",
+        email: "",
+        message: "",
+      });
+
+      setCaptchaToken(null);
+
     } catch (err) {
       console.error(err);
       alert("Error ❌");
@@ -59,26 +71,40 @@ const handleChange = (e) => {
     }
   };
 
-  if (submitted) {
-    return <h2>Thank you! Your message has been sent ✅</h2>;
-  }
-
   return (
     <form onSubmit={handleSubmit}>
       <Turnstile
         sitekey="0x4AAAAAACceNZ3KrjIuKt1b"
         onSuccess={(token) => setCaptchaToken(token)}
       />
-      <input name="name" onChange={handleChange} placeholder="Name" required />
-      <input name="email" onChange={handleChange} placeholder="Email" required />
+
+      <input
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        placeholder="Name"
+        required
+      />
+
+      <input
+        name="email"
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="Email"
+        required
+      />
+
       <textarea
         name="message"
+        value={formData.message}
         onChange={handleChange}
         placeholder="Message"
         required
       />
-      <button disabled={loading}>{loading ? "Sending..." : "Send"}</button>
+
+      <button disabled={loading}>
+        {loading ? "Sending..." : "Send"}
+      </button>
     </form>
   );
 }
-
