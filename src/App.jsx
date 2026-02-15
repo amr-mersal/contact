@@ -5,11 +5,20 @@ import Turnstile from "react-turnstile";
 export default function ContactForm() {
   const [captchaToken, setCaptchaToken] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    message: "",
+  name: "",
+  email: "",
+  message: "",
+});
+
+const handleChange = (e) => {
+  setFormData({
+    ...formData,
+    [e.target.name]: e.target.value,
   });
+};
+
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
