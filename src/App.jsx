@@ -4,6 +4,7 @@ import Turnstile from "react-turnstile";
 
 export default function ContactForm() {
   const [captchaToken, setCaptchaToken] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -11,20 +12,22 @@ export default function ContactForm() {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
     if (!captchaToken) {
       alert("Please verify captcha");
+      setLoading(false);
       return;
     }
 
     try {
-      await supabase.from("contacts").insert([formData]);
+      const { error } = await supabase
+        .from("contacts")
+        .insert([formData]);
+
+      if (error) throw error;
 
       await fetch(
         "https://enwgxqyvybcqsvqbzbip.supabase.co/functions/v1/send-email",
@@ -35,11 +38,10 @@ export default function ContactForm() {
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
           body: JSON.stringify({ ...formData, captchaToken }),
-        },
+        }
       );
 
-      alert("Message sent 🚀");
-      setFormData({ name: "", email: "", message: "" });
+      setSubmitted(true);
     } catch (err) {
       console.error(err);
       alert("Error ❌");
@@ -48,21 +50,18 @@ export default function ContactForm() {
     }
   };
 
+  if (submitted) {
+    return <h2>Thank you! Your message has been sent ✅</h2>;
+  }
+
   return (
-    <>
-      <h1>Heellloo</h1>
     <form onSubmit={handleSubmit}>
       <Turnstile
-        sitekey="0x4AAAAAACceNZ3KrjIuKt1b"
+        sitekey="YOUR_SITE_KEY"
         onSuccess={(token) => setCaptchaToken(token)}
       />
       <input name="name" onChange={handleChange} placeholder="Name" required />
-      <input
-        name="email"
-        onChange={handleChange}
-        placeholder="Email"
-        required
-      />
+      <input name="email" onChange={handleChange} placeholder="Email" required />
       <textarea
         name="message"
         onChange={handleChange}
@@ -71,6 +70,6 @@ export default function ContactForm() {
       />
       <button disabled={loading}>{loading ? "Sending..." : "Send"}</button>
     </form>
-      </>
   );
 }
+
